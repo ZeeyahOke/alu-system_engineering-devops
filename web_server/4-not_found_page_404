@@ -1,38 +1,21 @@
 #!/usr/bin/env bash
-# Installs Nginx with the following configurations:
-#+    Listens on port 80.
-#+    Returns a page containing "Holberton School" when queried
-#+     at the root with a curl GET request.
-#+    Configures /redirect_me as a "301 Moved Permanently".
-#+    Includes a custom 404 page containing "Ceci n'est pas une page".
-#+    Contains a custom HTTP header named X-Served-By.
-#+    The value of the HTTP header is the hostname of the running server.
+# Configure Nginx with a custom 404 page
 
-apt-get update
+# Install Nginx if not already installed
+apt-get update -y
 apt-get install -y nginx
 
-mkdir -p /var/www/html
-touch /var/www/html/index.html
+# Create a basic HTML page with the required content
 echo "Holberton School" > /var/www/html/index.html
-touch /var/www/html/404.html
+
+# Create custom 404 page with the exact required text
 echo "Ceci n'est pas une page" > /var/www/html/404.html
 
-printf %s "server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
-    add_header X-Served-By $HOSTNAME;
-    root   /var/www/html;
-    index  index.html index.htm;
+# Configure the custom 404 page in nginx default site
+error_config="error_page 404 /404.html;\n\tlocation = /404.html {\n\t\troot /var/www/html;\n\t\tinternal;\n\t}\n"
 
-    location /redirect_me {
-        return 301 http://cuberule.com/;
-    }
+# Update the nginx configuration
+sed -i "/server_name _;/a \\\t$error_config" /etc/nginx/sites-available/default
 
-    error_page 404 /404.html;
-    location /404 {
-      root /var/www/html;
-      internal;
-    }
-}" > /etc/nginx/sites-available/default
-
+# Restart Nginx to apply changes
 service nginx restart
